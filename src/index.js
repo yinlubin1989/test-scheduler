@@ -1,17 +1,37 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import {
+  schedulerCallback,
+  shouldYield,
+  ImmediatePriority, UserBlockingPriority, NormalPriority, LowPriority, IdlePriority,
+  cancelCallback
+} from './scheduler';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+let result = 0;
+let i = 0;
+function calc(didTimeout) {
+  console.log('开始1');
+  for (; i < 1000 && (!shouldYield() || didTimeout); i++) {
+    result += 1;
+  }
+  if (i < 1000) return calc;
+  console.log('1',result);
+  return null; 
+}
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+let result2 = 0;
+let i2 = 0;
+function calc2(didTimeout) {
+  console.log('开始2');
+  for (; i2 < 1000 && (!shouldYield() || didTimeout); i2++) {
+    result2 += 1;
+  }
+  if (i2 < 1000) return calc2;
+  console.log('2', result2);
+  return null; 
+}
+
+
+
+const task = schedulerCallback(ImmediatePriority, calc);
+const task2 = schedulerCallback(NormalPriority, calc2, { delay: 10000 });
+
+cancelCallback(task2)
